@@ -36,7 +36,7 @@ export default async function Navbar() {
     }
   }
 
-  // Ortak stil sınıfı
+  // Ortak link stili
   const baseLinkClass = "flex items-center gap-2 px-4 py-2 rounded-full font-bold text-gray-600 transition-all group";
 
   return (
@@ -44,22 +44,20 @@ export default async function Navbar() {
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex justify-between items-center h-24">
           
-          {/* --- LOGO --- */}
+          {/* --- LOGO KISMI --- */}
           <div className="flex items-center gap-8 xl:gap-12">
-            <Link href="/" className="flex items-center space-x-3 hover:opacity-90 transition group">
-              <div className="w-12 h-12 bg-gradient-to-tr from-red-600 to-red-800 rounded-2xl flex items-center justify-center shadow-xl shadow-red-100 group-hover:scale-105 transition-transform">
-                <span className="text-white font-black text-2xl">P</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-2xl font-black text-gray-900 tracking-tight leading-none">
-                  PDF<span className="text-red-600">Market</span>
-                </span>
-                <span className="text-[10px] font-bold text-gray-400 tracking-widest uppercase mt-0.5">Dijital Mağaza</span>
-              </div>
+            <Link href="/" className="flex flex-col hover:opacity-90 transition group">
+              <span className="text-3xl font-black tracking-tight leading-none">
+                <span className="text-gray-900">Dosya</span>
+                {/* 'Market' yazısı mor-lacivert degrade */}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">Market</span>
+              </span>
+              <span className="text-[11px] font-bold text-indigo-600 tracking-widest uppercase mt-0.5 ml-0.5">
+                Dijital Mağaza
+              </span>
             </Link>
             
             {/* --- MENÜ LİNKLERİ --- */}
-            {/* DÜZELTME: gap-1 yerine gap-6 yaptık, menüler ferahladı */}
             <div className="hidden md:flex items-center gap-6">
               
               <Link href="/" className={`${baseLinkClass} hover:text-blue-600 hover:bg-blue-50`}>
@@ -72,7 +70,6 @@ export default async function Navbar() {
                 Keşfet
               </Link>
               
-              {/* Giriş Yapmış Kullanıcı Linkleri */}
               <SignedIn>
                   <Link href="/products/new" className={`${baseLinkClass} hover:text-emerald-600 hover:bg-emerald-50`}>
                     <UploadCloud size={18} className="text-emerald-500 group-hover:scale-110 transition-transform" />
@@ -113,7 +110,8 @@ export default async function Navbar() {
                   </button>
                 </SignInButton>
                 <SignUpButton mode="modal">
-                  <button className="bg-red-600 hover:bg-red-700 text-white font-bold text-lg px-8 py-3.5 rounded-full transition-all hover:scale-105 shadow-xl shadow-red-200">
+                  {/* Buton rengi logoya uyumlu yapıldı */}
+                  <button className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-lg px-8 py-3.5 rounded-full transition-all hover:scale-105 shadow-xl shadow-purple-200">
                     Kayıt Ol
                   </button>
                 </SignUpButton>

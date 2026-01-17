@@ -1,12 +1,53 @@
+import { currentUser } from "@clerk/nextjs/server";
+import { prisma } from "@/lib/prisma"; 
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import NewProductForm from "@/components/NewProductForm"; // Ortak bileşeni çağırıyoruz
+import NewProductForm from "@/components/NewProductForm";
 
-export default function NewProductDashboardPage() {
+export default async function NewProductDashboardPage() {
+  
+  // 1. Kullanıcıyı al
+  const user = await currentUser();
+
+  // EĞER KULLANICI YOKSA: Redirect yapmak yerine "Giriş Yapmalısın" uyarısı göster.
+  // Bu sayede sayfa asla "Flash" yapıp kapanmaz.
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-4">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Oturum Açmanız Gerekiyor</h2>
+        <p className="text-gray-500 mb-6">Bu sayfayı görüntülemek için lütfen giriş yapın.</p>
+        <Link href="/" className="bg-black text-white px-6 py-3 rounded-full font-bold">
+          Ana Sayfaya Dön
+        </Link>
+      </div>
+    );
+  }
+
+  // 2. Satıcı Kaydını Kontrol Et / Oluştur
+  // Hata olsa bile sayfayı çökertmemek için try-catch kullanıyoruz.
+  try {
+    const sellerProfile = await prisma.sellerProfile.findUnique({
+      where: { userId: user.id }
+    });
+
+    if (!sellerProfile) {
+      await prisma.sellerProfile.create({
+        data: {
+          userId: user.id,
+          name: user.firstName || "Yeni Satıcı",
+          email: user.emailAddresses[0]?.emailAddress || "no-email",
+        }
+      });
+    }
+  } catch (error) {
+    console.error("Satıcı profili oluşturulurken hata (Önemli değil, form çalışabilir):", error);
+    // Hata olsa bile aşağıya devam et, kullanıcıyı sayfadan atma.
+  }
+
+  // 3. Formu Göster (Buraya kadar geldiyse sayfa kesinlikle açılır)
   return (
-    <div className="max-w-4xl mx-auto py-10 px-4">
+    <div className="max-w-4xl mx-auto py-10 px-4 animate-in fade-in duration-500">
       
-      {/* Üst Başlık ve İptal Butonu */}
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-black text-gray-900">Doküman Yükle</h1>
@@ -22,12 +63,6 @@ export default function NewProductDashboardPage() {
         </Link>
       </div>
 
-      {/* Daha önce hazırladığımız, içinde:
-        - Modern FileUpload bileşeni
-        - Hukuki Onay Kutucuğu
-        - Şık Form Tasarımı
-        bulunan ana bileşeni buraya yerleştiriyoruz.
-      */}
       <NewProductForm />
       
     </div>
