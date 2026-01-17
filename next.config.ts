@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Iyzipay hatasını çözen sihirli satır:
+  serverExternalPackages: ["iyzipay"],
+
   images: {
     remotePatterns: [
       {
