@@ -3,67 +3,30 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import Image from "next/image";
-import { Edit, Eye, Plus, FileText, Trash2, AlertCircle, CheckCircle, Archive } from "lucide-react";
-import { revalidatePath } from "next/cache";
+import { Edit, Eye, Plus, FileText, CheckCircle, Archive } from "lucide-react";
 
-// --- SİLME / ARŞİVLEME İŞLEMİ ---
-async function deleteProduct(formData: FormData) {
-  "use server";
-
-  const productId = formData.get("productId") as string;
-  const { userId } = await auth();
-
-  if (!userId || !productId) return;
-
-  // 1. Ürünü ve sipariş geçmişini kontrol et
-  const product = await prisma.product.findUnique({
-    where: { id: productId },
-    include: {
-      _count: { select: { orders: true } }
-    }
-  });
-
-  if (!product || product.sellerId !== userId) return;
-
-  // 2. MANTIK: İsim Değiştirme YOK. Sadece Durum Değişiyor.
-  if (product._count.orders > 0) {
-    // A) Ürün Satılmışsa: Sadece "Pasif" yap.
-    // Başlık (title) değişmediği için eski alıcılar kütüphanelerinde orijinal ismi görür.
-    // isActive: false olduğu için Keşfet sayfasında görünmez.
-    await prisma.product.update({
-      where: { id: productId },
-      data: { isActive: false } 
-    });
-  } else {
-    // B) Ürün Hiç Satılmamışsa: Veritabanından tamamen sil.
-    await prisma.product.delete({
-      where: { id: productId }
-    });
-  }
-
-  revalidatePath("/dashboard/products");
-  revalidatePath("/explore");
-}
+// DİKKAT: Yeni oluşturduğumuz butonu buradan çağırıyoruz.
+// Eğer dosya yolun farklıysa burayı düzelt: "@/components/DeleteProductButton"
+import DeleteProductButton from "@/components/DeleteProductButton"; 
 
 export default async function MyProductsPage() {
   const { userId } = await auth();
 
   if (!userId) redirect("/");
 
-  // Satıcının ürünlerini getir
-  // isActive filtresi koymuyoruz, çünkü satıcı pasife aldığı ürünleri de panelde görmeli.
+  // Veritabanından ürünleri çek
   const products = await prisma.product.findMany({
     where: { sellerId: userId },
     orderBy: { createdAt: "desc" },
     include: {
-      _count: { select: { orders: true } }
+      _count: { select: { orders: true } } // Satış sayısını alıyoruz
     }
   });
 
   return (
     <div className="space-y-8 pb-20">
       
-      {/* HEADER */}
+      {/* BAŞLIK */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-black text-gray-900">Ürünlerim</h1>
@@ -107,8 +70,6 @@ export default async function MyProductsPage() {
               <tbody className="divide-y divide-gray-100">
                 {products.map((product) => {
                   
-                  // Ürün pasifse "Yayından Kaldırıldı" muamelesi yap
-                  // isDeleted alanı varsa onu da kontrol edebilirsin ama isActive yeterli.
                   const isUnpublished = !product.isActive; 
                   const hasSales = product._count.orders > 0;
 
@@ -126,7 +87,6 @@ export default async function MyProductsPage() {
                           )}
                         </div>
                         <div>
-                          {/* İsim Asla Çizilmiyor veya Değişmiyor */}
                           <div className={`font-bold line-clamp-1 ${isUnpublished ? 'text-gray-600' : 'text-gray-900'}`}>
                               {product.title}
                           </div>
@@ -165,11 +125,11 @@ export default async function MyProductsPage() {
                         {product._count.orders} Adet
                     </td>
 
-                    {/* Butonlar */}
+                    {/* İŞLEMLER */}
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                           
-                          {/* Düzenle */}
+                          {/* Düzenle Butonu */}
                           <Link 
                             href={`/dashboard/products/${product.id}/edit`}
                             className="p-2 border border-gray-200 rounded-lg text-gray-500 hover:bg-black hover:text-white transition"
@@ -177,25 +137,13 @@ export default async function MyProductsPage() {
                             <Edit size={16} />
                           </Link>
 
-                          {/* SİL / ARŞİVLE BUTONU */}
-                          {/* Sadece hala aktifse gösteriyoruz */}
+                          {/* SİL BUTONU (Client Component Kullanılıyor) */}
+                          {/* Artık burada onClick YOK. Sadece bileşeni çağırıyoruz */}
                           {!isUnpublished && (
-                              <form action={deleteProduct}>
-                                <input type="hidden" name="productId" value={product.id} />
-                                <button 
-                                  type="submit"
-                                  className="p-2 border border-gray-200 rounded-lg text-red-500 hover:bg-red-600 hover:text-white hover:border-red-600 transition cursor-pointer"
-                                  title="Yayından Kaldır / Sil"
-                                  onClick={(e) => {
-                                      const msg = hasSales 
-                                        ? "Bu ürün daha önce satıldığı için tamamen silinmeyecek, sadece YAYINDAN KALDIRILACAK (Yeni alıcılar göremeyecek). Onaylıyor musunuz?"
-                                        : "Bu ürünü tamamen silmek istediğinize emin misiniz?";
-                                      if(!confirm(msg)) e.preventDefault();
-                                  }}
-                                >
-                                  <Trash2 size={16} />
-                                </button>
-                              </form>
+                            <DeleteProductButton 
+                              productId={product.id} 
+                              hasSales={hasSales} 
+                            />
                           )}
 
                       </div>
