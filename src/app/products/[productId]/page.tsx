@@ -39,40 +39,34 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     if (existingOrder) hasPurchased = true;
   }
 
+  // --- BAŞLIK TEMİZLİĞİ ---
+  // Detay sayfasında da parantez içindeki silindi yazısını uçuruyoruz.
+  const cleanTitle = product.title.replace(/\s*\(SİLİNDİ\)\s*/gi, "");
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
       
-      {/* LAYOUT DEĞİŞİKLİĞİ: 
-         flex-row yerine flex-col kullandık. 
-         Böylece Önizleme Üstte, Bilgiler Altta oldu.
-         Genişliği de max-w-2xl yaparak daha kompakt (A4 dikey hissiyatı) hale getirdik.
-      */}
       <div className="max-w-2xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200">
         
         {/* --- BÖLÜM 1: GÜVENLİ PDF PENCERESİ (ÜSTTE) --- */}
         <div className="bg-gray-800 p-6 flex flex-col items-center justify-center relative select-none">
           
           {product.pdfUrl ? (
-            // PENCERE KONTEYNERİ
-            // Yüksekliği h-[350px] yaptık (Daha küçük ve kompakt)
             <div className="relative w-full max-w-[320px] h-[350px] bg-white rounded-md shadow-2xl overflow-hidden border-4 border-gray-700 group">
                
-               {/* --- GÜVENLİK KATMANI 1: SABİT FİLİGRAN (CAM ÜZERİNDE) --- */}
-               {/* Bu katman 'absolute inset-0' ile pencereye sabitlenir. 
-                   İçerik kaydırılsa bile bu yazılar HEP ORADA KALIR. */}
+               {/* Güvenlik Katmanları */}
                <div className="absolute inset-0 z-30 pointer-events-none flex flex-col items-center justify-center gap-12 overflow-hidden bg-black/5">
-                  {[...Array(6)].map((_, i) => (
-                    <div key={i} className="transform -rotate-12 text-2xl font-black text-red-500/20 whitespace-nowrap select-none">
-                      DEMO • KOPYALANAMAZ • DEMO
-                    </div>
-                  ))}
+                 {[...Array(6)].map((_, i) => (
+                   <div key={i} className="transform -rotate-12 text-2xl font-black text-red-500/20 whitespace-nowrap select-none">
+                     DEMO • KOPYALANAMAZ • DEMO
+                   </div>
+                 ))}
                </div>
 
-               {/* --- GÜVENLİK KATMANI 2: ÜST VE ALT BARLAR --- */}
                <div className="absolute top-0 left-0 right-0 h-8 bg-gray-900 z-40 flex items-center justify-between px-3">
                   <div className="flex items-center gap-1.5">
-                     <Lock size={12} className="text-red-400" />
-                     <span className="text-[10px] text-white font-bold tracking-widest uppercase">KORUMALI ÖNİZLEME</span>
+                      <Lock size={12} className="text-red-400" />
+                      <span className="text-[10px] text-white font-bold tracking-widest uppercase">KORUMALI ÖNİZLEME</span>
                   </div>
                   <EyeOff size={14} className="text-gray-500" />
                </div>
@@ -81,13 +75,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                    <p className="text-[10px] text-white font-medium opacity-80">Devamını görmek için satın alın</p>
                </div>
 
-               {/* --- İÇERİK ALANI (KAYDIRILABİLİR) --- */}
-               {/* Kullanıcı sadece bu div'i kaydırabilir */}
                <div className="w-full h-full overflow-y-auto overflow-x-hidden custom-scrollbar pt-8 pb-12 bg-gray-200">
-                 
-                 {/* PDF (BULANIK VE RENKSİZ) */}
-                 {/* pointer-events-none: Tıklamayı engeller */}
-                 {/* blur-[1px]: Netliği bozar */}
                  <div className="w-full h-[1200px] pointer-events-none relative bg-white filter blur-[0.8px] grayscale contrast-125 px-1">
                     <iframe 
                       src={`${product.pdfUrl}#toolbar=0&navpanes=0&view=Fit&scrollbar=0`}
@@ -100,13 +88,11 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                
             </div>
           ) : (
-            // PDF Yoksa Resim
             <div className="relative w-full max-w-[320px] aspect-[3/4] shadow-xl rounded-sm overflow-hidden transform rotate-1 border-4 border-white">
-               <Image src={product.imageUrl || ""} alt={product.title} fill className="object-cover" />
+               <Image src={product.imageUrl || ""} alt={cleanTitle} fill className="object-cover" />
             </div>
           )}
 
-          {/* Uyarı Metni */}
           <div className="mt-4 flex items-center gap-2 text-white/50 text-xs font-mono">
              <AlertTriangle size={12} />
              <span>İçerik güvenliği nedeniyle önizleme sınırlandırılmıştır.</span>
@@ -121,7 +107,8 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                 <span className="inline-block px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] font-bold uppercase tracking-wider rounded-full mb-2">
                   {product.category}
                 </span>
-                <h1 className="text-2xl font-black text-gray-900 leading-tight">{product.title}</h1>
+                {/* TEMİZLENMİŞ BAŞLIK BURAYA GELİYOR */}
+                <h1 className="text-2xl font-black text-gray-900 leading-tight">{cleanTitle}</h1>
              </div>
              {product.isApproved && (
                 <div className="bg-green-50 p-2 rounded-full text-green-600" title="Onaylı İçerik">

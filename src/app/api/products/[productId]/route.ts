@@ -10,7 +10,7 @@ type Props = {
   params: Promise<{ productId: string }>;
 };
 
-// 1. GET (Mevcut)
+// 1. GET
 export async function GET(req: NextRequest, props: Props) {
   try {
     const params = await props.params;
@@ -27,7 +27,7 @@ export async function GET(req: NextRequest, props: Props) {
   }
 }
 
-// 2. PATCH (Mevcut)
+// 2. PATCH
 export async function PATCH(req: NextRequest, props: Props) {
   try {
     const params = await props.params;
@@ -69,7 +69,7 @@ export async function PATCH(req: NextRequest, props: Props) {
   }
 }
 
-// 3. DELETE (GÜNCELLENDİ: Akıllı Silme)
+// 3. DELETE (YENİ: isDeleted Destekli)
 export async function DELETE(req: NextRequest, props: Props) {
   try {
     const params = await props.params;
@@ -78,11 +78,10 @@ export async function DELETE(req: NextRequest, props: Props) {
 
     if (!userId) return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });
 
-    // Ürünü ve sipariş geçmişini kontrol et
     const product = await prisma.product.findUnique({
       where: { id: productId },
       include: { 
-        orders: true // Siparişleri de çekiyoruz
+        orders: true 
       }
     });
 
@@ -92,41 +91,37 @@ export async function DELETE(req: NextRequest, props: Props) {
 
     // --- SENARYO 1: Ürünün Satış Geçmişi Var ---
     if (product.orders.length > 0) {
-        // 
-        // Ürün satılmışsa veritabanından SİLEMEYİZ (Fatura/Sipariş bozulur).
-        // Bunun yerine "Arşivliyoruz" (Pasife çekiyoruz).
+        // Ürün satılmışsa fiziksel olarak silmiyoruz, isDeleted işaretliyoruz.
         await prisma.product.update({
             where: { id: productId },
             data: {
-                isActive: false,       // Satışa kapat
-                isApproved: false,     // Vitrinden kaldır
-                title: `${product.title} (SİLİNDİ)`, // Panelde anlaşılsın diye ismini değiştiriyoruz
+                isDeleted: true,       // Keşfet'te gizle (Yeni eklediğimiz alan)
+                isActive: false,        // Satışa kapat
+                isApproved: false,      // Vitrinden kaldır
             }
         });
 
         return NextResponse.json({ 
             success: true, 
-            message: "Ürün geçmiş siparişleri olduğu için tamamen silinmedi, arşive kaldırıldı." 
+            message: "Ürün geçmiş siparişleri olduğu için arşive kaldırıldı." 
         });
     }
 
     // --- SENARYO 2: Ürün Hiç Satılmamış ---
-    // Gönül rahatlığıyla her yerden silebiliriz.
-
-    // A) UploadThing'den dosyaları temizle
+    // Dosyaları UploadThing'den sil
     if (product.pdfUrl) {
         const fileKey = product.pdfUrl.split("/").pop();
-        if (fileKey) await utapi.deleteFiles(fileKey);
+        if (fileKey) await utapi.deleteFiles(fileKey).catch(e => console.log("Dosya silme hatası:", e));
     }
     if (product.imageUrl) {
         const imageKey = product.imageUrl.split("/").pop();
-        if (imageKey) await utapi.deleteFiles(imageKey);
+        if (imageKey) await utapi.deleteFiles(imageKey).catch(e => console.log("Resim silme hatası:", e));
     }
 
-    // B) Veritabanından Sil
+    // Veritabanından tamamen sil
     await prisma.product.delete({ where: { id: productId } });
 
-    return NextResponse.json({ success: true, message: "Ürün başarıyla silindi." });
+    return NextResponse.json({ success: true, message: "Ürün tamamen silindi." });
 
   } catch (error: any) {
     console.error("DELETE Hatası:", error);

@@ -25,6 +25,7 @@ model Product {
   // Durumlar
   isApproved  Boolean  @default(false) // Admin onayı (Varsayılan: Onaysız)
   isActive    Boolean  @default(true)  // Satıcı tarafından pasife alma
+  isDeleted   Boolean  @default(false) // YUMUŞAK SİLME (Bu alan eklendi)
   views       Int      @default(0)
 
   createdAt   DateTime @default(now())
@@ -39,39 +40,39 @@ model Product {
 
 // 2. SİPARİŞ MODELİ
 model Order {
-  id                 String   @id @default(cuid())
-  orderNumber        String   @default(cuid())
+  id                  String   @id @default(cuid())
+  orderNumber         String   @default(cuid())
 
   // Ürün Bilgileri (Snapshot - Ürün silinse bile sipariş kaydı bozulmaz)
-  productId          String
-  productTitle       String
+  productId           String
+  productTitle        String
 
   // --- FİNANSAL KIRILIM ---
-  pricePaid          Float    // Müşterinin ödediği toplam tutar
-  platformFee        Float    @default(0) // Platform Komisyonu
+  pricePaid           Float    // Müşterinin ödediği toplam tutar
+  platformFee         Float    @default(0) // Platform Komisyonu
   paymentProviderFee Float    @default(0) // Ödeme altyapısı kesintisi (iyzico vs.)
-  taxAmount          Float    @default(0) // Vergiler
-  netEarnings        Float    @default(0) // Satıcının cebine giren net para
+  taxAmount           Float    @default(0) // Vergiler
+  netEarnings         Float    @default(0) // Satıcının cebine giren net para
 
-  status             String   @default("PENDING") // PENDING, SUCCESS, FAILED
-  paymentId          String?  // Ödeme sağlayıcı ID'si
+  status              String   @default("PENDING") // PENDING, SUCCESS, FAILED
+  paymentId           String?  // Ödeme sağlayıcı ID'si
 
   // Alıcı Bilgileri
-  buyerId            String   // Satın alanın User ID'si
-  buyerEmail         String?
-  userId             String   // (Geriye dönük uyumluluk için)
+  buyerId             String   // Satın alanın User ID'si
+  buyerEmail          String?
+  userId              String   // (Geriye dönük uyumluluk için)
 
   // Satıcı Bilgisi
-  sellerId           String   
+  sellerId            String   
 
   // İndirme Tokenları
-  downloadToken      String   @unique @default(uuid())
-  downloadExpiry     DateTime?
+  downloadToken       String   @unique @default(uuid())
+  downloadExpiry      DateTime?
 
-  createdAt          DateTime @default(now())
+  createdAt           DateTime @default(now())
 
   // İlişki
-  product            Product  @relation(fields: [productId], references: [id])
+  product             Product  @relation(fields: [productId], references: [id])
 }
 
 // 3. SATICI PROFİLİ MODELİ
