@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import Image from "next/image";
 import Link from "next/link";
-import { Search } from "lucide-react"; // İkonu lucide-react'ten çekelim, daha temiz olur
+import { Search } from "lucide-react";
 
 interface ExplorePageProps {
   searchParams: Promise<{ category?: string; q?: string }>;
@@ -12,11 +12,12 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
   const selectedCategory = params.category || "Hepsi";
   const searchQuery = params.q || "";
 
-  // --- DÜZELTME BURADA YAPILDI ---
-  // Artık sadece onaylı değil, aynı zamanda SİLİNMEMİŞ ürünleri getiriyoruz.
+  // --- KRİTİK KURAL ---
+  // Sadece isActive: true olanları getiriyoruz.
+  // Satıcı ürünü sildiğinde (aslında pasife aldığında), buradaki filtreye takılır ve görünmez.
   const whereCondition: any = {
-    isApproved: true,
-    isDeleted: false, // <--- İşte sihirli satır bu! Silinenleri gizler.
+    isApproved: true, 
+    isActive: true,    // <-- BU SATIR ÇOK ÖNEMLİ
   };
 
   if (selectedCategory !== "Hepsi") {
@@ -71,7 +72,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        {/* Kategoriler (Yatay Kaydırmalı Mobil Uyumlu) */}
+        {/* Kategoriler */}
         <div className="flex overflow-x-auto pb-4 mb-6 gap-2 no-scrollbar">
           {categories.map((cat) => (
             <Link
@@ -112,7 +113,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 text-gray-300">
                       <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-2">
-                         <span className="text-2xl">📄</span>
+                          <span className="text-2xl">📄</span>
                       </div>
                     </div>
                   )}
@@ -122,7 +123,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                     {product.category}
                   </span>
 
-                  {/* Fiyat Etiketi (Görsel Üstü) */}
+                  {/* Fiyat Etiketi */}
                   <div className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-lg">
                     {product.price === 0 ? "Ücretsiz" : `${product.price} ₺`}
                   </div>
@@ -136,12 +137,12 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                   
                   <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
                     <div className="flex items-center gap-2">
-                       <div className="w-5 h-5 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-[8px] text-white font-bold">
+                        <div className="w-5 h-5 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-[8px] text-white font-bold">
                           {product.seller.shopName ? product.seller.shopName[0].toUpperCase() : "S"}
-                       </div>
-                       <p className="text-xs text-gray-500 font-medium truncate max-w-[100px]">
-                         {product.seller.shopName || "Satıcı"}
-                       </p>
+                        </div>
+                        <p className="text-xs text-gray-500 font-medium truncate max-w-[100px]">
+                          {product.seller.shopName || "Satıcı"}
+                        </p>
                     </div>
                     <span className="text-xs font-bold text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0 duration-300">
                       İncele &rarr;

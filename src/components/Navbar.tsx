@@ -16,6 +16,7 @@ import {
   Store, 
   ShieldCheck 
 } from "lucide-react";
+import MobileMenu from "./MobileMenu"; // <--- YENİ EKLENDİ
 
 export default async function Navbar() {
   const user = await currentUser();
@@ -57,7 +58,7 @@ export default async function Navbar() {
               </span>
             </Link>
             
-            {/* --- MENÜ LİNKLERİ --- */}
+            {/* --- MASAÜSTÜ MENÜ LİNKLERİ (Sadece PC'de görünür: hidden md:flex) --- */}
             <div className="hidden md:flex items-center gap-6">
               
               <Link href="/" className={`${baseLinkClass} hover:text-blue-600 hover:bg-blue-50`}>
@@ -91,9 +92,10 @@ export default async function Navbar() {
             </div>
           </div>
 
-          {/* --- SAĞ TARAF (AUTH) --- */}
+          {/* --- SAĞ TARAF --- */}
           <div className="flex items-center gap-6">
             
+            {/* Admin Linki (Sadece Masaüstü) */}
             {isAdmin && (
                <Link href="/dashboard/admin" className="hidden lg:flex items-center gap-2 px-5 py-3 rounded-full bg-black text-white text-xs font-bold uppercase tracking-wider hover:bg-gray-800 transition-all shadow-lg hover:-translate-y-0.5">
                  <ShieldCheck size={16} />
@@ -101,8 +103,11 @@ export default async function Navbar() {
                </Link>
             )}
 
-            <div className="flex items-center gap-4">
-              {/* GİRİŞ YAPMAMIŞSA */}
+            {/* --- MOBİL MENÜ ENTEGRASYONU (Sadece Telefonda Görünür) --- */}
+            <MobileMenu isSeller={isSeller} isAdmin={isAdmin} />
+
+            {/* --- MASAÜSTÜ AUTH BUTONLARI (Telefonda gizlenir: hidden md:flex) --- */}
+            <div className="hidden md:flex items-center gap-4">
               <SignedOut>
                 <SignInButton mode="modal">
                   <button className="text-gray-600 hover:text-black font-bold text-lg px-6 py-3 hover:bg-gray-100 rounded-full transition-all">
@@ -110,14 +115,12 @@ export default async function Navbar() {
                   </button>
                 </SignInButton>
                 <SignUpButton mode="modal">
-                  {/* Buton rengi logoya uyumlu yapıldı */}
                   <button className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-lg px-8 py-3.5 rounded-full transition-all hover:scale-105 shadow-xl shadow-purple-200">
                     Kayıt Ol
                   </button>
                 </SignUpButton>
               </SignedOut>
 
-              {/* GİRİŞ YAPMIŞSA */}
               <SignedIn>
                 <div className="flex items-center gap-4 pl-6 border-l border-gray-200 h-12">
                    <div className="flex flex-col items-end hidden sm:flex">
@@ -135,6 +138,7 @@ export default async function Navbar() {
                 </div>
               </SignedIn>
             </div>
+
           </div>
         </div>
       </div>
