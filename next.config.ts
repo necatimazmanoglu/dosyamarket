@@ -1,10 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // 1. Iyzipay paketleme hatasını çözen ayar
+  // 1. Iyzipay paketleme hatasını çözen ayar (Module not found hatası için)
   serverExternalPackages: ["iyzipay"],
 
   // 2. TypeScript hatalarını görmezden gel (Build'i durdurmasın)
+  // Vercel'deki "Type error" hatalarını bypass eder.
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -19,15 +20,15 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "images.unsplash.com",
+        hostname: "images.unsplash.com", // Hata veren Unsplash resimleri için
       },
       {
         protocol: "https",
-        hostname: "utfs.io",
+        hostname: "utfs.io", // UploadThing'den gelen kapak resimleri için
       },
       {
         protocol: "https",
-        hostname: "img.clerk.com",
+        hostname: "img.clerk.com", // Clerk kullanıcı profil resimleri için
       },
     ],
   },

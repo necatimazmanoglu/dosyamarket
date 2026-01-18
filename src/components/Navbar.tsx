@@ -53,7 +53,7 @@ export default async function Navbar() {
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">Market</span>
               </span>
               <span className="text-[11px] font-bold text-indigo-600 tracking-widest uppercase mt-0.5 ml-0.5">
-                Dijital Mağaza
+                Dijital Pazaryeri
               </span>
             </Link>
             
