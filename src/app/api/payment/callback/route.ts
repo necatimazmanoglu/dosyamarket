@@ -12,8 +12,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Token yok" }, { status: 400 });
     }
 
-    // Promise yapısı ile iyzico sorgusu
-    return new Promise((resolve) => {
+    // DÜZELTME: Promise'in dönüş tipini <NextResponse> olarak belirttik.
+    return new Promise<NextResponse>((resolve) => {
       // @ts-ignore
       iyzico.checkoutForm.retrieve({
         locale: "tr",
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
         
         // 1. Ödeme Başarısızsa
         if (err || result.status !== "success" || result.paymentStatus !== "SUCCESS") {
-           // Başarısız sayfasına yönlendir (Query param ile)
+           // Başarısız sayfasına yönlendir
            resolve(NextResponse.redirect(new URL("/?status=payment-failed", request.url)));
            return;
         }
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (!product) {
-            resolve(NextResponse.json({ error: "Ürün bulunamadı" })); 
+            resolve(NextResponse.json({ error: "Ürün bulunamadı" }, { status: 404 })); 
             return;
         }
 
@@ -49,22 +49,19 @@ export async function POST(request: NextRequest) {
         const price = product.price;
 
         // A. iyzico Kesintisi (Tahmini: %2.99 + 0.25 TL)
-        // Not: Gerçekte iyzico panelindeki oran neyse buraya onu yazmalısın.
         const iyzicoRate = 0.0299; 
         const iyzicoFixed = 0.25;
         const paymentProviderFee = (price * iyzicoRate) + iyzicoFixed;
 
-        // B. Platform Komisyonu (Satıcıya özel oran var mı?)
-        // Standart %10, ama satıcının özel oranı varsa o geçerli.
+        // B. Platform Komisyonu
         const standardRate = 10; 
         const appliedRate = product.seller.commissionRate !== null ? product.seller.commissionRate : standardRate;
         const platformFee = price * (appliedRate / 100);
 
         // C. Satıcıya Kalan NET Tutar
-        // Formül: Fiyat - iyzico - Komisyon
         const netEarnings = price - paymentProviderFee - platformFee;
 
-        // 2. Siparişi Tüm Detaylarıyla Kaydet (Veri Tutarlılığı İçin)
+        // 2. Siparişi Tüm Detaylarıyla Kaydet
         const order = await prisma.order.create({
           data: {
             userId: userId,
@@ -79,11 +76,11 @@ export async function POST(request: NextRequest) {
             
             status: "SUCCESS",
             paymentId: result.paymentId,
-            sellerId: product.sellerId, // Satıcıyı kolay bulmak için
+            sellerId: product.sellerId,
           },
         });
 
-        // 3. Satıcının Bakiyesini Artır (Sadece NET tutarı ekliyoruz)
+        // 3. Satıcının Bakiyesini Artır
         await prisma.sellerProfile.update({
           where: { userId: product.sellerId },
           data: {
