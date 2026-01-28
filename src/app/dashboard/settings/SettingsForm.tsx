@@ -27,7 +27,7 @@ export default function SettingsForm({ seller }: SettingsFormProps) {
     } catch (error) {
       alert("Beklenmedik bir hata oluştu.");
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   };
 

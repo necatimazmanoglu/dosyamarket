@@ -9,8 +9,7 @@ export default async function NewProductDashboardPage() {
   // 1. Kullanıcıyı al
   const user = await currentUser();
 
-  // EĞER KULLANICI YOKSA: Redirect yapmak yerine "Giriş Yapmalısın" uyarısı göster.
-  // Bu sayede sayfa asla "Flash" yapıp kapanmaz.
+  // EĞER KULLANICI YOKSA: "Giriş Yapmalısın" uyarısı göster.
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-4">
@@ -24,27 +23,32 @@ export default async function NewProductDashboardPage() {
   }
 
   // 2. Satıcı Kaydını Kontrol Et / Oluştur
-  // Hata olsa bile sayfayı çökertmemek için try-catch kullanıyoruz.
   try {
     const sellerProfile = await prisma.sellerProfile.findUnique({
       where: { userId: user.id }
     });
 
     if (!sellerProfile) {
+      // --- DÜZELTME BURADA ---
+      // Eksik olan shopName ve diğer zorunlu alanları ekledik.
       await prisma.sellerProfile.create({
         data: {
           userId: user.id,
           name: user.firstName || "Yeni Satıcı",
           email: user.emailAddresses[0]?.emailAddress || "no-email",
+          shopName: (user.firstName || "Kullanıcı") + " Mağazası", // EKLENDİ
+          iban: "TR000000000000000000000000", // EKLENDİ (Dummy data)
+          address: "Henüz girilmedi",         // EKLENDİ
+          city: "Belirtilmedi"                // EKLENDİ
         }
       });
     }
   } catch (error) {
-    console.error("Satıcı profili oluşturulurken hata (Önemli değil, form çalışabilir):", error);
-    // Hata olsa bile aşağıya devam et, kullanıcıyı sayfadan atma.
+    console.error("Satıcı profili oluşturulurken hata:", error);
+    // Hata olsa bile formu göstermeye çalışalım, belki kullanıcı zaten vardır ama bağlantı kopmuştur.
   }
 
-  // 3. Formu Göster (Buraya kadar geldiyse sayfa kesinlikle açılır)
+  // 3. Formu Göster
   return (
     <div className="max-w-4xl mx-auto py-10 px-4 animate-in fade-in duration-500">
       

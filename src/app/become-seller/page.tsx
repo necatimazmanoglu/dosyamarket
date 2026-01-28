@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-// LİNK İÇİN BU SATIRI EKLEDİK
-import Link from "next/link"; 
+import Link from "next/link";
 
 export default function BecomeSellerPage() {
   const router = useRouter();
@@ -35,7 +34,8 @@ export default function BecomeSellerPage() {
       const data = await res.json();
 
       if (res.ok) {
-        router.push("/products/new"); 
+        // Başarılı olursa ürün ekleme sayfasına yönlendir
+        router.push("/dashboard/products/new"); 
         router.refresh();
       } else {
         alert(data.error || "Bir hata oluştu.");
@@ -60,7 +60,6 @@ export default function BecomeSellerPage() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           
-          {/* Diğer inputlar (Mağaza Adı, IBAN vs.) aynı kalacak... */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Mağaza Adı *</label>
             <input 
@@ -107,7 +106,6 @@ export default function BecomeSellerPage() {
             />
           </div>
 
-          {/* --- GÜNCELLENEN KISIM BURASI --- */}
           <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
             <input 
               id="terms"
@@ -127,7 +125,6 @@ export default function BecomeSellerPage() {
               'ni okudum, onaylıyorum.
             </label>
           </div>
-          {/* -------------------------------- */}
 
           <button
             type="submit"

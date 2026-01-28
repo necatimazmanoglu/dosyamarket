@@ -4,8 +4,6 @@ import { currentUser } from "@clerk/nextjs/server";
 import { 
   SignInButton, 
   SignUpButton, 
-  SignedIn, 
-  SignedOut, 
   UserButton 
 } from "@clerk/nextjs";
 import { 
@@ -16,10 +14,20 @@ import {
   Store, 
   ShieldCheck 
 } from "lucide-react";
-import MobileMenu from "./MobileMenu"; // <--- YENİ EKLENDİ
+import MobileMenu from "./MobileMenu";
 
 export default async function Navbar() {
-  const user = await currentUser();
+  // --- GÜVENLİK DÜZELTMESİ ---
+  // API hatası olursa site çökmesin diye try-catch kullanıyoruz.
+  let user = null;
+  try {
+    user = await currentUser();
+  } catch (error) {
+    console.error("Clerk kullanıcı hatası (Geçici olabilir):", error);
+    // Hata durumunda user null kalır, site "Giriş Yap" modunda açılır.
+  }
+  // ---------------------------
+
   const userEmail = user?.emailAddresses[0]?.emailAddress;
 
   const ADMIN_EMAIL = "necatimazmanoglu@gmail.com"; 
@@ -50,7 +58,6 @@ export default async function Navbar() {
             <Link href="/" className="flex flex-col hover:opacity-90 transition group">
               <span className="text-3xl font-black tracking-tight leading-none">
                 <span className="text-gray-900">Dosya</span>
-                {/* 'Market' yazısı mor-lacivert degrade */}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">Market</span>
               </span>
               <span className="text-[11px] font-bold text-indigo-600 tracking-widest uppercase mt-0.5 ml-0.5">
@@ -58,7 +65,7 @@ export default async function Navbar() {
               </span>
             </Link>
             
-            {/* --- MASAÜSTÜ MENÜ LİNKLERİ (Sadece PC'de görünür: hidden md:flex) --- */}
+            {/* --- MASAÜSTÜ MENÜ LİNKLERİ (Sadece PC'de görünür) --- */}
             <div className="hidden md:flex items-center gap-6">
               
               <Link href="/" className={`${baseLinkClass} hover:text-blue-600 hover:bg-blue-50`}>
@@ -71,7 +78,9 @@ export default async function Navbar() {
                 Keşfet
               </Link>
               
-              <SignedIn>
+              {/* Kullanıcı varsa menüleri göster */}
+              {user && (
+                <>
                   <Link href="/products/new" className={`${baseLinkClass} hover:text-emerald-600 hover:bg-emerald-50`}>
                     <UploadCloud size={18} className="text-emerald-500 group-hover:scale-110 transition-transform" />
                     PDF Sat
@@ -88,14 +97,15 @@ export default async function Navbar() {
                       Satıcı Paneli
                     </Link>
                   )}
-              </SignedIn>
+                </>
+              )}
             </div>
           </div>
 
           {/* --- SAĞ TARAF --- */}
           <div className="flex items-center gap-6">
             
-            {/* Admin Linki (Sadece Masaüstü) */}
+            {/* Admin Linki */}
             {isAdmin && (
                <Link href="/dashboard/admin" className="hidden lg:flex items-center gap-2 px-5 py-3 rounded-full bg-black text-white text-xs font-bold uppercase tracking-wider hover:bg-gray-800 transition-all shadow-lg hover:-translate-y-0.5">
                  <ShieldCheck size={16} />
@@ -103,29 +113,31 @@ export default async function Navbar() {
                </Link>
             )}
 
-            {/* --- MOBİL MENÜ ENTEGRASYONU (Sadece Telefonda Görünür) --- */}
+            {/* Mobil Menü */}
             <MobileMenu isSeller={isSeller} isAdmin={isAdmin} />
 
-            {/* --- MASAÜSTÜ AUTH BUTONLARI (Telefonda gizlenir: hidden md:flex) --- */}
+            {/* --- MASAÜSTÜ AUTH BUTONLARI --- */}
             <div className="hidden md:flex items-center gap-4">
-              <SignedOut>
-                <SignInButton mode="modal">
-                  <button className="text-gray-600 hover:text-black font-bold text-lg px-6 py-3 hover:bg-gray-100 rounded-full transition-all">
-                    Giriş Yap
-                  </button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <button className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-lg px-8 py-3.5 rounded-full transition-all hover:scale-105 shadow-xl shadow-purple-200">
-                    Kayıt Ol
-                  </button>
-                </SignUpButton>
-              </SignedOut>
-
-              <SignedIn>
+              {!user ? (
+                // KULLANICI YOKSA -> GİRİŞ / KAYIT BUTONLARI
+                <>
+                  <SignInButton mode="modal">
+                    <button className="text-gray-600 hover:text-black font-bold text-lg px-6 py-3 hover:bg-gray-100 rounded-full transition-all">
+                      Giriş Yap
+                    </button>
+                  </SignInButton>
+                  <SignUpButton mode="modal">
+                    <button className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-lg px-8 py-3.5 rounded-full transition-all hover:scale-105 shadow-xl shadow-purple-200">
+                      Kayıt Ol
+                    </button>
+                  </SignUpButton>
+                </>
+              ) : (
+                // KULLANICI VARSA -> PROFİL
                 <div className="flex items-center gap-4 pl-6 border-l border-gray-200 h-12">
                    <div className="flex flex-col items-end hidden sm:flex">
                      <span className="text-base font-bold text-gray-900">{user?.firstName}</span>
-                     <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Hesabım</span>
+                     <span className="text-xs text-gray-400 font-bold uppercase tracking-wide">Hesabım</span>
                    </div>
                    <UserButton 
                      afterSignOutUrl="/"
@@ -136,7 +148,7 @@ export default async function Navbar() {
                      }}
                    />
                 </div>
-              </SignedIn>
+              )}
             </div>
 
           </div>
